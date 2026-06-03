@@ -1,0 +1,82 @@
+#include <ESP8266WiFi.h>
+
+String apiKey = "7WDNA6GPMMA5T2KK";
+
+const char *ssid = "Netrew";
+const char *pass = "12345678";
+const char *server = "api.thingspeak.com";
+
+WiFiClient client;
+
+void setup()
+{
+    Serial.begin(9600);
+    delay(10);
+
+    Serial.println("Connecting to WiFi...");
+
+    WiFi.begin(ssid, pass);
+
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(500);
+        Serial.print(".");
+    }
+
+    Serial.println();
+    Serial.println("WiFi Connected");
+}
+
+void loop()
+{
+    if (Serial.available())
+    {
+        String data = Serial.readStringUntil('\n');
+
+        Serial.println(data);
+
+        // Extract values sent from Arduino
+        int indexA = data.indexOf("a") + 1;
+        int indexB = data.indexOf("b") + 1;
+        int indexC = data.indexOf("c") + 1;
+
+        String valueA =
+            data.substring(indexA, data.indexOf("b"));
+
+        String valueB =
+            data.substring(indexB, data.indexOf("c"));
+
+        String valueC =
+            data.substring(indexC);
+
+        if (client.connect(server, 80))
+        {
+            String postStr =
+                "api_key=" + apiKey;
+
+            postStr += "&field1=" + valueA;
+            postStr += "&field2=" + valueB;
+            postStr += "&field3=" + valueC;
+
+            client.print(
+                "POST /update HTTP/1.1\r\n");
+            client.print(
+                "Host: api.thingspeak.com\r\n");
+            client.print(
+                "Connection: close\r\n");
+            client.print(
+                "Content-Type: application/x-www-form-urlencoded\r\n");
+
+            client.print(
+                "Content-Length: ");
+            client.print(postStr.length());
+            client.print("\r\n\r\n");
+
+            client.print(postStr);
+
+            delay(15000);
+        }
+
+        client.stop();
+    }
+}
