@@ -1,82 +1,76 @@
 #include <ESP8266WiFi.h>
 
 String apiKey = "7WDNA6GPMMA5T2KK";
-
-const char *ssid = "Netrew";
-const char *pass = "12345678";
-const char *server = "api.thingspeak.com";
+const char* ssid = "Netrew";
+const char* pass = "12345678";
+const char* server = "api.thingspeak.com";
 
 WiFiClient client;
 
-void setup()
-{
-    Serial.begin(9600);
-    delay(10);
+void setup() {
+  Serial.begin(9600);
+  delay(10);
 
-    Serial.println("Connecting to WiFi...");
+  Serial.println("Connecting to WiFi...");
+  WiFi.begin(ssid, pass);
 
-    WiFi.begin(ssid, pass);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
 
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        delay(500);
-        Serial.print(".");
-    }
-
-    Serial.println();
-    Serial.println("WiFi Connected");
+  Serial.println("\nWiFi connected");
 }
 
-void loop()
-{
-    if (Serial.available())
-    {
-        String data = Serial.readStringUntil('\n');
+void loop() {
 
-        Serial.println(data);
+  if (Serial.available() > 0) {
 
-        // Extract values sent from Arduino
-        int indexA = data.indexOf("a") + 1;
-        int indexB = data.indexOf("b") + 1;
-        int indexC = data.indexOf("c") + 1;
+    String data = Serial.readStringUntil('\n');
 
-        String valueA =
-            data.substring(indexA, data.indexOf("b"));
+    int indexA = data.indexOf("a") + 1;
+    int indexB = data.indexOf("b") + 1;
+    int indexC = data.indexOf("c") + 1;
+    int indexD = data.indexOf("d") + 1;
+    int indexE = data.indexOf("e") + 1;
+    int indexF = data.indexOf("f") + 1;
+    int indexG = data.indexOf("g") + 1;
+    int indexH = data.indexOf("h") + 1;
+    int indexI = data.indexOf("i") + 1;
 
-        String valueB =
-            data.substring(indexB, data.indexOf("c"));
+    String valueA = data.substring(indexA, indexB - 1);
+    String valueB = data.substring(indexB, indexC - 1);
+    String valueC = data.substring(indexC, indexD - 1);
+    String valueD = data.substring(indexD, indexE - 1);
+    String valueE = data.substring(indexE, indexF - 1);
+    String valueF = data.substring(indexF, indexG - 1);
+    String valueG = data.substring(indexG, indexH - 1);
+    String valueH = data.substring(indexH, indexI - 1);
+    String valueI = data.substring(indexI);
 
-        String valueC =
-            data.substring(indexC);
+    if (client.connect(server, 80)) {
 
-        if (client.connect(server, 80))
-        {
-            String postStr =
-                "api_key=" + apiKey;
+      String postStr = apiKey;
+      postStr += "&field1=" + valueA;
+      postStr += "&field2=" + valueB;
+      postStr += "&field3=" + valueC;
+      postStr += "&field4=" + valueD;
+      postStr += "&field5=" + valueE;
+      postStr += "&field6=" + valueF;
+      postStr += "&field7=" + valueG;
+      postStr += "&field8=" + valueI;
 
-            postStr += "&field1=" + valueA;
-            postStr += "&field2=" + valueB;
-            postStr += "&field3=" + valueC;
+      client.println("POST /update HTTP/1.1");
+      client.println("Host: api.thingspeak.com");
+      client.println("Connection: close");
+      client.println("X-THINGSPEAKAPIKEY: " + apiKey);
+      client.println("Content-Type: application/x-www-form-urlencoded");
+      client.print("Content-Length: ");
+      client.println(postStr.length());
+      client.println();
+      client.print(postStr);
 
-            client.print(
-                "POST /update HTTP/1.1\r\n");
-            client.print(
-                "Host: api.thingspeak.com\r\n");
-            client.print(
-                "Connection: close\r\n");
-            client.print(
-                "Content-Type: application/x-www-form-urlencoded\r\n");
-
-            client.print(
-                "Content-Length: ");
-            client.print(postStr.length());
-            client.print("\r\n\r\n");
-
-            client.print(postStr);
-
-            delay(15000);
-        }
-
-        client.stop();
+      Serial.println("Data sent to ThingSpeak");
     }
+  }
 }
