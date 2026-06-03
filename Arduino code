@@ -1,3 +1,21 @@
+/*****************************************************************
+ * CADAM - Comprehensive Accident Detection and Alert Management
+ * Arduino Mega 2560 Main Program
+ *
+ * Sensors:
+ *  - ADXL345 Accelerometer (Accident Detection)
+ *  - MQ3 Alcohol Sensor
+ *  - DHT11 Temperature Sensor
+ *  - DS18B20 Engine Temperature Sensor
+ *  - GPS Module
+ *  - GSM Module
+ *  - Ultrasonic Sensors (Front & Rear)
+ *  - Eye Blink Sensor
+ *  - Emergency Push Button
+ *  - Voice Recorder Module
+ *  - LCD I2C Display
+ *****************************************************************/
+
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_ADXL345_U.h>
@@ -8,27 +26,125 @@
 #include <SoftwareSerial.h>
 #include <TinyGPS.h>
 
+// =====================================================
+// Ultrasonic Sensor Pins
+// =====================================================
 #define TRIG_FRONT 22
 #define ECHO_FRONT 23
+
 #define TRIG_BACK 48
 #define ECHO_BACK 49
 
-const int alcoholPin = 4;
-const int buttonPin = 53;
-const int poten = A0;
-const int voicePinREC = 3;
-const int eyeBlinkPin = 5;
+// =====================================================
+// Sensor Pins
+// =====================================================
+const int alcoholPin    = 4;
+const int buttonPin     = 53;
+const int poten         = A0;
+const int voicePinREC   = 3;
+const int eyeBlinkPin   = 5;
 
+// =====================================================
+// DS18B20 Temperature Sensor
+// =====================================================
 #define ONE_WIRE_BUS 51
 
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
+// =====================================================
+// DHT11 Sensor
+// =====================================================
 #define DHTPIN 2
 #define DHTTYPE DHT11
+
 DHT dht(DHTPIN, DHTTYPE);
 
+// =====================================================
+// ADXL345 Accelerometer
+// =====================================================
 Adafruit_ADXL345_Unified accel =
-    Adafruit_ADXL345_Unified(12345);
+Adafruit_ADXL345_Unified(12345);
 
+// =====================================================
+// LCD Display
+// =====================================================
 LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// =====================================================
+// Drowsiness Detection Variables
+// =====================================================
+unsigned long eyeClosedStartTime = 0;
+bool eyeClosed = false;
+
+// =====================================================
+// GPS Variables
+// =====================================================
+TinyGPS gps;
+
+float gpslat;
+float gpslon;
+
+String glat = "0.000000";
+String glon = "0.000000";
+
+// =====================================================
+// General Variables
+// =====================================================
+float temperature;
+float tempC;
+int speed;
+
+// =====================================================
+// SETUP
+// =====================================================
+void setup()
+{
+    Serial.begin(9600);   // Debug
+
+    Serial1.begin(9600);  // GSM
+    Serial2.begin(9600);  // GPS
+    Serial3.begin(9600);  // NodeMCU
+
+    sensors.begin();
+    dht.begin();
+
+    if (!accel.begin())
+    {
+        Serial.println("No valid ADXL345 sensor found!");
+        while (1);
+    }
+
+    pinMode(alcoholPin, INPUT);
+    pinMode(buttonPin, INPUT_PULLUP);
+    pinMode(poten, INPUT);
+
+    pinMode(voicePinREC, OUTPUT);
+    pinMode(eyeBlinkPin, INPUT);
+
+    pinMode(TRIG_FRONT, OUTPUT);
+    pinMode(ECHO_FRONT, INPUT);
+
+    pinMode(TRIG_BACK, OUTPUT);
+    pinMode(ECHO_BACK, INPUT);
+
+    digitalWrite(voicePinREC, HIGH);
+
+    lcd.init();
+    lcd.backlight();
+
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("CADAM");
+
+    lcd.setCursor(0, 1);
+    lcd.print("System");
+
+    Serial.println("CADAM Initialized");
+
+    delay(2000);
+
+    lcd.clear();
+
+    recordVoiceStart();
+}
