@@ -1,0 +1,34 @@
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_ADXL345_U.h>
+#include <LiquidCrystal_I2C.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <DHT.h>
+#include <SoftwareSerial.h>
+#include <TinyGPS.h>
+
+#define TRIG_FRONT 22
+#define ECHO_FRONT 23
+#define TRIG_BACK 48
+#define ECHO_BACK 49
+
+const int alcoholPin = 4;
+const int buttonPin = 53;
+const int poten = A0;
+const int voicePinREC = 3;
+const int eyeBlinkPin = 5;
+
+#define ONE_WIRE_BUS 51
+
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+
+#define DHTPIN 2
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+Adafruit_ADXL345_Unified accel =
+    Adafruit_ADXL345_Unified(12345);
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
